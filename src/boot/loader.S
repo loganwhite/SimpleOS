@@ -238,3 +238,21 @@ popa_ret:
     popa
     ret                 # Error code still in CF
 
+#### Command-line arguments and their count.
+#### This is written by the kernel utility and read by the kernel.
+#### The loader itself does not do anything with the command line.
+
+    .org LOADER_ARG_CNT - LOADER_BASE   # Following code is inserted 
+                                        # at the start of the section plus
+    .fill LOADER_ARG_CNT_LEN, 1, 0      # .fill fills mem with 0 1 time.
+    
+    .org LOADER_ARGS - LOADER_BASE
+    .fill LOADER_ARGS_LEN, 1, 0
+
+    # Partition table.
+    .org LOADER_PARTS - LOADER_BASE
+    .fill LOADER_PARTS_LEN, 1, 0
+
+    # Boot-sector signature for BIOS inspection.
+    .org LOADER_SIG - LOADER_BASE
+    .word 0xaa55
