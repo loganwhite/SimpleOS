@@ -161,4 +161,36 @@ start:
 # Reload all the other segment registers and the stack pointer to point into our
 # new GDT.
 
-1:  mov $SEL_KDSEG, %ax 
+1:  mov $SEL_KDSEG, %ax
+    mov %ax, %ds
+    mov %ax, %es
+    mov %ax, %fs
+    mov %ax, %gs
+    mov %ax, %ss
+    addl $LOADER_PHY_BASE, %esp
+    movl $0 , %ebp      # Null-terminate main()'s backtrace
+
+#### Call main().
+
+    call main
+
+# main() should not ever return. if it does, spin
+
+1:  jmp 1b
+.endfunc
+
+#### GDT
+    .align 8
+gdt:
+    .quad 0x0000000000000000        # Null segment. Not used by CPU.
+    .quad 0x00cf9a000000ffff        # System code, base 0, limit 4GB
+    .quad 0x00cf92000000ffff        # System data, base 0, limit 4GB
+gdtdesc:
+    .word gdtdesc - gdt - 1         # Size of the GDT, minus 1 byte.
+    .long gdt                       # Address of the GDT.
+
+#### Physical memory size in 4KB pages. This is exported to the rest of the kernel.
+
+    .globl init_ram_pages
+init_ram_pages:
+    .long 0
