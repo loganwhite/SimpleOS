@@ -85,4 +85,58 @@ typedef int tid_t;
    ready state is on the run queue, whereas only a thread in the
    blocked state is on a semaphore wait list. */
 
+    typedef struct _tag_thread {
+        tid_t tid;                  /* Thread identifier */
+        enum thread_status status;  /* Thread state. */
+        char name[16];              /* Name of the thread, debug purpose. */
+        uint8_t *statck;            /* Saved stack pointer. */
+        int priority;               /* Priority. */
+        struct list_elem all_elem;  /* List element for all threads list. */
+
+        struct list_elem elem;      /* List element. Shared between thread.c and synch.c */
+        
+#ifdef USERPROG
+        /* Owned by userprog/process.c */
+        uint32_t *pagedir;          /* Page directory. */
 #endif
+        /* Owned by thread.c */
+        unsigned magic;             /* Detects stack overflows. */
+
+    } thread;
+
+/* If false (Default), use round-robin scheduler. if true, use multi-level
+ * feedback queue scheduler. Controlled by kernel command-line opetion "-o mlfqs". */
+extern bool thread_mlfqs;
+
+void thread_init(void);
+void thread_start(void);
+
+void thread_tick(void);
+void thread_print_stats(void);
+
+typedef void thread_func(void *aux);
+tid_t thread_create(const char* name, int priority, thread_func*, void*);
+
+void thread_block(void);
+void thread_unblock(thread*);
+
+thread* thread_current(void);
+tid_t thread_tid(void);
+const char* thread_name(void);
+
+void thread_exit(void) NO_RETURN;
+void thread_yield(void);
+
+/* Performs some operation on thread_t, given auxiliary data AUX. */
+typedef void thread_action_func(thread* t, void *aux);
+void thread_foreach(thread_action_func*, void*);
+
+int thread_get_priority(void);
+void thread_set_priority(void);
+
+int thread_get_nice(void);
+void thread_set_nice(int);
+int thread_get_recent_cpu(void);
+int thread_get_load_avg(void);
+
+#endif /* End of thread.h */
